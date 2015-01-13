@@ -1,11 +1,13 @@
 #!/usr/bin/python
 
 import os
+import site
 import sys
 import getopt
 
+# The DDN python API modules are installed in /lap
+site.addsitedir('/lap/python-ddn/lib/python2.7/site-packages')
 sys.path.append('/opt/ddn')
-#sys.path.append('lib')
 
 from ddn.sfa.api import *
 
@@ -26,6 +28,7 @@ def basic_health(self, args):
     msg = ''
 
     system = args
+    status = exitstatus['OK']
 
     for data in system.getAll():
         try:
@@ -45,23 +48,25 @@ def basic_health(self, args):
             print "         %s(%s): %s(%d)" % (self, name, HealthName, HealthState)
 
         if HealthState == SFA_HEALTH_STATES['HEALTH_NA']:
-            msg +='%s %s: Health state is not available\n' % (self, HealthName)
-            status = exitstatus['UNKNOWN']
+            msg +='%s %s: Health state is not available - %s\n' % (HealthName, self, OID)
+            tmpstatus = exitstatus['UNKNOWN']
         elif HealthState == SFA_HEALTH_STATES['HEALTH_OK']:
             # msg +=' %s: %s - %s %s\n' % (HealthName, self, name, OID)
-            status = exitstatus['OK']
+            tmpstatus = exitstatus['OK']
         elif HealthState == SFA_HEALTH_STATES['HEALTH_NON_CRITICAL']:
-            msg +='%s %s\n' % (self, HealthName)
-            status = exitstatus['WARNING']
+            msg +='%s %s - %s\n' % (HealthName, self, OID)
+            tmpstatus = exitstatus['WARNING']
         elif HealthState == SFA_HEALTH_STATES['HEALTH_CRITICAL']:
-            msg +='%s %s\n' % (self, HealthName)
-            status = exitstatus['CRITICAL']
+            msg +='%s %s - %s\n' % (HealthName, self, OID)
+            tmpstatus = exitstatus['CRITICAL']
         elif HealthState == SFA_HEALTH_STATES['HEALTH_UNKNOWN']:
-            msg +='%s %s: Health state is not available\n' % (self, HealthName)
-            status = exitstatus['UNKNOWN']
+            msg +='%s %s: Health state is not available - %s\n' % (HealthName, self, OID)
+            tmpstatus = exitstatus['UNKNOWN']
         else:
-            msg +='%s %s: Unreachable state\n' % (self, HealthName)
-            status = exitstatus['UNKNOWN']
+            msg +='%s %s: Unreachable state - %s\n' % (HealthName, self, OID)
+            tmpstatus = exitstatus['UNKNOWN']
+        if tmpstatus > status:
+            status = tmpstatus
     return (status, msg)
 
 def fan_health(self, args):
@@ -96,8 +101,8 @@ allcomponents = {
     'SFADiskDrive'          : (SFADiskDrive, [basic_health]),
     'SFADiskSlot'           : (SFADiskSlot, [basic_health]),
     'SFAFan'                : (SFAFan, [basic_health, fan_health]),
-#    'SFAHostChannel'        : (SFAHostChannel, []),
-#    'SFAHostChannelErrors'  : (SFAHostChannelErrors, [basic_health]),
+    # 'SFAHostChannel'        : (SFAHostChannel, []),
+    # 'SFAHostChannelErrors'  : (SFAHostChannelErrors, [basic_health]),
     'SFAPowerSupply'        : (SFAPowerSupply, [basic_health]),
     'SFAStoragePool'        : (SFAStoragePool, [basic_health]),
     'SFATemperatureSensor'  : (SFATemperatureSensor, [basic_health]),
@@ -190,10 +195,13 @@ def main(argv, environ):
     elif status == exitstatus['UNKNOWN']:
         print "UNKNOWN: %s" % msg
         sys.exit(exitstatus['UNKNOWN'])
-    else:
+    elif status == exitstatus['OK']:
         msg = "%d checks run %s" % (checks_run, msg)
         print "OK: %s" % msg
         sys.exit(exitstatus['OK'])
+    else:
+        print 'UNKNOWN: Unreachable state: %s\n' % msg
+        status = exitstatus['UNKNOWN']
 
     # Should never be reached
     sys.exit(99)
