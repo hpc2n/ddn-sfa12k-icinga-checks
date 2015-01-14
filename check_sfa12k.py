@@ -11,13 +11,11 @@ sys.path.append('/opt/ddn')
 
 from ddn.sfa.api import *
 
+#
 verbose = 0
 
 # Statuses known to Icinga
 exitstatus = { 'OK' : 0 , 'WARNING' : 1, 'CRITICAL' : 2 , 'UNKNOWN' : 3}
-
-# Tests to run by default
-run_test = 'all'
 
 #### The tests
 
@@ -71,6 +69,8 @@ def basic_health(self, args):
 
 def fan_health(self, args):
     global exitstatus
+    global verbose
+
     system = args
     msg=''
 
@@ -113,6 +113,9 @@ allcomponents = {
 
 def main(argv, environ):
     global verbose
+    global exitstatus
+
+    run_test = 'all'
 
     try:
         opts, args = getopt.gnu_getopt(argv[1:], '', ['sfa=', 'verbose', 'test=',
