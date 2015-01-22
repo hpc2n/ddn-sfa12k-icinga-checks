@@ -5,17 +5,20 @@ import site
 import sys
 import getopt
 
-# The DDN python API modules are installed in /lap
-site.addsitedir('/lap/python-ddn/lib/python2.7/site-packages')
-sys.path.append('/opt/ddn')
-
-from ddn.sfa.api import *
-
 #
 verbose = 0
 
 # Statuses known to Icinga
 exitstatus = { 'OK' : 0 , 'WARNING' : 1, 'CRITICAL' : 2 , 'UNKNOWN' : 3}
+
+# The DDN python API modules are installed in /lap
+site.addsitedir('/lap/python-ddn/lib/python2.7/site-packages')
+sys.path.append('/opt/ddn')
+try:
+    from ddn.sfa.api import *
+except ImportError:
+    print 'CRITICAL: %s' % 'Can\'t find the DDN SFA API module'
+    sys.exit(exitstatus['CRITICAL'])
 
 #### The tests
 
@@ -159,7 +162,12 @@ def main(argv, environ):
         sys.exit(exitstatus['CRITICAL'])
 
     # Connect to the SFA
-    APIConnect('https://%s' % sfa_hostname, auth=(sfa_username, sfa_password))
+    try:
+        APIConnect('https://%s' % sfa_hostname, auth=(sfa_username, sfa_password))
+    except:
+        print ('CRITICAL: Couldn\'t connect to %s' % sfa_hostname)
+        sys.exit(exitstatus['CRITICAL'])
+
 
     if verbose > 0:
         print "Tests: %s\n" % components.keys()
