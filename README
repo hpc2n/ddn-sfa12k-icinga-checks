@@ -1,0 +1,7 @@
+This is a Nagios/Icinga plugin for checking the status of a DDN SFA12K controller using the DDN API.
+
+The DDN python API modules are rquired.
+
+Copyright: 2014-2015, HPC2N, Umeå University
+
+Author: Björn Torkelsson <bjorn.torkelsson@hpc2n.umu.se>

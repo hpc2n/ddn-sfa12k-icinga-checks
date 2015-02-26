@@ -1,4 +1,10 @@
 #!/usr/bin/python
+#
+# A Nagios/icinga plugin for DDN SFA12K controller
+#
+# (c) 2014 - 2015, HPC2N, Umeå University
+#
+# Author: Björn Torkelsson <bjorn.torkelsson@hpc2n.umu.se>
 
 import os
 import site
